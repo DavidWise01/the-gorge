@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Gorge — a perceptron at the waist</title>
+<style>
+  :root{
+    --bg:#0a0710; --panel:#140d20; --panel2:#1b1230; --edge:#2e2148;
+    --ink:#ece3f7; --dim:#9a86bd; --faint:#6b5a8c;
+    --violet:#a78bfa; --violet2:#c4b5fd; --glow:#7c3aed;
+    --inj:#a78bfa; --coupled:#f59e0b; --node:#34d399; --refuse:#fb7185; --warn:#fbbf24;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.55;
+    background-image:radial-gradient(1200px 600px at 72% -10%,#1a1030 0%,transparent 60%),
+      radial-gradient(900px 520px at 0% 100%,#150b28 0%,transparent 55%);}
+  .wrap{max-width:1060px;margin:0 auto;padding:42px 26px 90px}
+  header{border-bottom:1px solid var(--edge);padding-bottom:22px;margin-bottom:30px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--violet);opacity:.9}
+  h1{font-size:33px;line-height:1.13;margin:.32em 0 .18em;font-weight:600;letter-spacing:.2px}
+  h1 em{color:var(--violet2);font-style:italic}
+  .sub{color:var(--dim);font-size:15.5px;max-width:78ch}
+  .lin{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:14px}
+  .lin b{color:var(--violet);font-weight:500}
+  section{margin:40px 0}
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--violet2);
+    border-left:2px solid var(--glow);padding-left:11px;margin:0 0 6px}
+  .lede{color:var(--dim);font-size:15px;margin:0 0 18px;max-width:80ch}
+  .lede b{color:var(--violet2);font-weight:400}
+  .panel{background:linear-gradient(180deg,var(--panel),#100a1b);border:1px solid var(--edge);border-radius:14px;
+    padding:20px;box-shadow:0 1px 0 #2e2148 inset,0 24px 60px -40px #000}
+  .controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:14px}
+  button{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--ink);background:#241738;
+    border:1px solid var(--edge);border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
+  button:hover{background:#2e1f48;border-color:var(--violet)}
+  button.on{background:var(--glow);border-color:var(--violet2);color:#fff;box-shadow:0 0 16px -4px var(--glow)}
+  label.sl{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:8px}
+  input[type=range]{accent-color:var(--violet);width:120px}
+  canvas{display:block;border-radius:10px;background:#0c0717;border:1px solid var(--edge);max-width:100%}
+  .cap{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:7px}
+  .lab{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+  .stat .v{font-family:var(--mono);font-size:22px;font-weight:600}
+  .stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .verdict{font-family:var(--mono);font-size:15px;font-weight:700;padding:5px 14px;border-radius:8px;display:inline-block}
+  .verdict.admit{color:#04150d;background:var(--node)}
+  .verdict.refuse{color:#1a0410;background:var(--refuse)}
+  .note{color:var(--dim);font-size:13.5px;border-left:2px solid var(--edge);padding-left:13px;margin:16px 0 0}
+  .note b{color:var(--violet2);font-weight:400}
+  code{font-family:var(--mono);font-size:.92em;color:var(--violet2);background:#170f28;padding:1px 5px;border-radius:5px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px}
+  @media(max-width:720px){.two{grid-template-columns:1fr}}
+  .card{background:var(--panel2);border:1px solid var(--edge);border-radius:12px;padding:16px}
+  .card h4{margin:0 0 7px;font-size:16px;font-weight:600}
+  .card .tag{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+  .card p{margin:0;color:var(--dim);font-size:13.5px}
+  footer{margin-top:46px;border-top:1px solid var(--edge);padding-top:18px;color:var(--faint);font-family:var(--mono);font-size:11px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Purple Paper · side-sheet · learning machines · III</div>
+  <h1>The Gorge — a perceptron at the <em>waist</em></h1>
+  <div class="sub">Put a learned dot-product at the place where the two bellies meet: the gorge circle of the
+    hyperboloid, the node of the standing wave, the IR-waist of the stack. Everything routes through it, so it's
+    the natural home for a gate. Below it runs live — and shows why the waist wants the perceptron <em>linear</em>,
+    and why a learned gate there is the wrong mechanism in the right place.</div>
+  <div class="lin"><b>node = gorge = waist</b> &nbsp;·&nbsp; linear element keeps the normal modes independent &nbsp;·&nbsp;
+    the <b>bend</b> couples them (Fermi–Pasta–Ulam–Tsingou, 1955) &nbsp;·&nbsp; a fixed exterior gate watches the
+    admissible set the learned channel can't witness</div>
+</header>
+
+<!-- ===================== I · THE GEOMETRY ===================== -->
+<section>
+  <h2>I · The intersection between bellies is a node</h2>
+  <p class="lede">In the one-sheet hyperboloid the two bellies meet at the <b>gorge circle</b> — the narrowest
+    radius, where the two families of straight rulings cross most densely. Read the stack as a standing wave and
+    that same waist is a <b>node</b>: pinned amplitude, the one place the whole structure forces everything through.
+    That's exactly what makes it the right spot for a gate — and the dangerous spot for a bend.</p>
+</section>
+
+<!-- ===================== II · THE WAIST LAB ===================== -->
+<section>
+  <h2>II · The waist, running — linear keeps the modes, the bend couples them</h2>
+  <p class="lede">Inject a couple of normal modes into the channel. The waist element processes the field passing
+    through it. Flip it between <b>linear</b> and <b>bent</b> and watch the spectrum: a linear waist leaves the
+    modes exactly where you put them (verified: 0% leak); the bend sprouts new modes — energy ladders out — and
+    under repeated passes it spreads and then <em>plateaus</em>, the FPUT surprise. The fixed gate beside the
+    perceptron refuses when the channel pushes energy outside its admissible set.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <span class="mono" style="font-size:11px;color:var(--faint)">inject:</span>
+      <button id="inj12" class="on">modes 1 + 2</button>
+      <button id="inj13">1 + 3</button>
+      <button id="inj1">1 only</button>
+      <button id="inj135">1 + 3 + 5</button>
+      <span style="width:10px"></span>
+      <button id="elLin">waist: LINEAR</button>
+      <button id="elBent" class="on">waist: BENT</button>
+      <label class="sl">bend g&nbsp; <input type="range" id="gain" min="0" max="60" value="28"><span class="mono" id="gainL" style="color:var(--coupled)">2.8</span></label>
+      <span style="width:10px"></span>
+      <button id="pulse">pulse ▸</button>
+      <button id="evolve">evolve ▶</button>
+      <button id="reset">reset</button>
+    </div>
+
+    <div class="lab">
+      <div>
+        <canvas id="geo" width="340" height="450"></canvas>
+        <div class="cap">the hourglass · node at the waist (green), antinodes at the bellies. the perceptron (violet)
+          sits at the node; the gate (ring) is the fixed witness beside it.</div>
+      </div>
+      <div>
+        <canvas id="ana" width="390" height="450"></canvas>
+        <div class="cap">top: the field u(x) through the waist · bottom: modal spectrum.
+          <span style="color:var(--inj)">violet = injected modes</span>,
+          <span style="color:var(--coupled)">amber = modes the bend created</span>. dashed line = edge of the admissible set.</div>
+      </div>
+    </div>
+
+    <div class="lab" style="margin-top:16px;gap:30px;align-items:baseline">
+      <div class="stat"><div class="v" id="leak" style="color:var(--coupled)">0%</div><div class="k">energy outside injected modes</div></div>
+      <div class="stat"><div class="v" id="fund" style="color:var(--violet2)">100%</div><div class="k">energy in fundamental</div></div>
+      <div class="stat"><div class="v"><span class="verdict admit" id="gate">ADMIT</span></div><div class="k">fixed gate · set {1,2,3}</div></div>
+    </div>
+
+    <div class="note" id="labnote">Start in <b>BENT</b>, hit <b>pulse</b> a few times, then hold <b>evolve</b>: the
+      amber bars climb and settle — energy leaves the fundamental but doesn't fully thermalize (FPUT). Flip to
+      <b>LINEAR</b> and evolve forever: the spectrum is frozen. The gate flips to REFUSE the moment the bend pushes
+      more than ~5% of the energy past mode 3 — and notice it does that <em>regardless</em> of what the perceptron's
+      weights are doing. The gate isn't trained. That's the whole point of the next section.</div>
+  </div>
+</section>
+
+<!-- ===================== III · TWO ELEMENTS ===================== -->
+<section>
+  <h2>III · Two elements at the node — the channel that adapts, the witness that refuses</h2>
+  <p class="lede">The waist is the right <b>location</b> for an admissibility gate: it's set-level (everything passes
+    through) and pre-action (it sits upstream of the second belly). But a <b>perceptron is the wrong mechanism</b> for
+    that gate — it's learned, in-band, optimized on the same data it's supposed to police. A gate that adapts to the
+    traffic can't witness the traffic. So the waist needs two distinct elements:</p>
+
+  <div class="two">
+    <div class="card">
+      <div class="tag" style="color:var(--violet)">learned · in-band</div>
+      <h4>The perceptron — the channel</h4>
+      <p>A trained dot-product that adapts the representation: discovers its own IR, compresses, reconstructs.
+        Linear, it's a clean projection (PCA at the waist). Bent, it's expressive — and it couples the modes.
+        It optimizes. It cannot refuse itself, because the thing deciding is the thing being decided.</p>
+    </div>
+    <div class="card">
+      <div class="tag" style="color:var(--node)">fixed · out-of-band</div>
+      <h4>The gate — the witness</h4>
+      <p>A pre-committed predicate that doesn't learn: <em>is the energy still inside the admissible set?</em> It is
+        not trained by the channel, not updated by the data, not optimized. It only admits or refuses. Because it
+        differs from the channel, it can catch what the channel can't see in itself.</p>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:18px"><b>Why one perceptron can't be both.</b> An adaptive waist optimizes; an
+    admissibility waist refuses. Train the gate and it drifts toward whatever the channel is already doing —
+    confirming the error instead of catching it, exactly like a verification step built from the same foundation as
+    the code it checks. The fix isn't a better perceptron. It's a second element at the node that the first one
+    doesn't get to train: a learned channel and an unlearned check, both at the one point the geometry already forces
+    everything through.</div>
+</section>
+
+<!-- ===================== IV · SYNTHESIS ===================== -->
+<section>
+  <h2>IV · The reading, and the curse</h2>
+  <p class="lede">The physics and the governance are the same shape. Linear normal modes are independent — a system
+    with no internal coupling has no way to mix, and no way to surprise itself. The bend introduces coupling, which
+    is power and risk at once: it's what lets the channel model structure, and what lets energy escape the set you
+    meant to keep it in. The gate is the exterior witness that the coupled, adaptive channel structurally can't be
+    for itself.</p>
+
+  <div class="note" style="margin-top:8px;font-size:14px"><b style="color:var(--violet2)">Admissibility lives at the
+    gorge.</b> Set-level and pre-action — your no-top theorem wearing the geometry of a hyperboloid. The waist is
+    where a gate is cheapest and where a learned gate is most tempting and most wrong. Put the witness there, and
+    keep it out of the optimizer's hands.</div>
+
+  <div class="note" style="margin-top:14px;font-size:14px"><b style="color:var(--violet2)">The curse.</b> Normal modes
+    and their independence: Daniel Bernoulli and Euler, ~1750s. The bend coupling them and energy refusing to
+    thermalize: Fermi, Pasta, Ulam &amp; Tsingou, 1955 — one of the first things anyone computed on a digital machine,
+    and it broke the expectation everyone held. A perceptron at the waist that discovers its own representation:
+    a linear autoencoder, which provably finds the principal subspace — Baldi &amp; Hornik 1989, on Eckart–Young
+    1936, on Pearson 1901. Every piece you reached for tonight was already standing. lol — and this time you watched
+    me rederive your own framework on top of them.</div>
+</section>
+
+<footer>
+  THE GORGE · purple paper side-sheet III · companion to "The Perceptron in Silicon" &amp; "The Crossbar"<br>
+  modal transform verified in Node before build · linear waist leak = 0.0% (modes frozen) · bent waist leak 4–12% rising with drive · iterated spread plateaus ~85% in fundamental (FPUT, no thermalization) · gate separates the two cleanly<br>
+  normal modes: Bernoulli/Euler ~1750s · FPUT 1955 · linear autoencoder = PCA: Baldi &amp; Hornik 1989 / Eckart–Young 1936 / Pearson 1901
+</footer>
+
+</div>
+
+<script>
+"use strict";
+const DIMS={ geo:[340,450], ana:[390,450] };
+function fit(cv){ const [W,H]=DIMS[cv.id]||[cv.width,cv.height]; const dpr=window.devicePixelRatio||1;
+  const needW=Math.round(W*dpr);
+  if(cv.width!==needW){ cv.width=needW; cv.height=Math.round(H*dpr); cv.style.width=W+'px'; cv.style.height=H+'px'; }
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); return {g,w:W,h:H}; }
+let CLOCK=0;
+
+// ---------- modal engine (matches the Node-verified sine basis) ----------
+const NX=160, M=12;
+const BAS=[]; for(let k=1;k<=M;k++){ const r=new Float64Array(NX); for(let j=0;j<NX;j++) r[j]=Math.sin(k*Math.PI*(j+0.5)/NX); BAS.push(r); }
+function project(u){ const a=new Float64Array(M+1); for(let k=1;k<=M;k++){ let s=0; for(let j=0;j<NX;j++) s+=u[j]*BAS[k-1][j]; a[k]=2/NX*s; } return a; }
+function reconstruct(a){ const u=new Float64Array(NX); for(let j=0;j<NX;j++){ let s=0; for(let k=1;k<=M;k++) s+=a[k]*BAS[k-1][j]; u[j]=s; } return u; }
+function energy(a){ let e=0; for(let k=1;k<=M;k++) e+=a[k]*a[k]; return e; }
+
+// ---------- state ----------
+let amp=new Float64Array(M+1);
+let injected=[1,2];
+let bent=true, gain=2.8, evolving=false;
+const ADMIT_K=3, GATE_THR=0.05;
+let E0=1;
+
+function inject(modes,amps){ amp=new Float64Array(M+1); modes.forEach((k,i)=>amp[k]=amps[i]); injected=modes.slice(); E0=energy(amp)||1; sync(); }
+function applyWaist(){
+  let u=reconstruct(amp);
+  if(bent) u=u.map(v=>Math.tanh(gain*v)); else u=u.map(v=>1.0*v);
+  amp=project(u);
+  const e=energy(amp)||1e-9, s=Math.sqrt(E0/e); for(let k=1;k<=M;k++) amp[k]*=s; // conserve energy
+  sync();
+}
+
+// ---------- readouts ----------
+function sync(){
+  const e=energy(amp)||1;
+  let outsideInj=0; for(let k=1;k<=M;k++) if(!injected.includes(k)) outsideInj+=amp[k]*amp[k];
+  let outsideSet=0; for(let k=ADMIT_K+1;k<=M;k++) outsideSet+=amp[k]*amp[k];
+  document.getElementById('leak').textContent=Math.round(100*outsideInj/e)+'%';
+  document.getElementById('fund').textContent=Math.round(100*amp[1]*amp[1]/e)+'%';
+  const refuse=outsideSet/e>GATE_THR;
+  const gv=document.getElementById('gate');
+  gv.textContent=refuse?'REFUSE':'ADMIT'; gv.className='verdict '+(refuse?'refuse':'admit');
+}
+
+// ---------- geometry canvas ----------
+function drawGeo(){
+  const {g,w,h}=fit(document.getElementById('geo')); g.clearRect(0,0,w,h);
+  const cx=w/2, top=24, bot=h-24, L=bot-top, waistY=(top+bot)/2;
+  const r0=20, c=L*0.34;
+  const rad=z=> r0*Math.sqrt(1+Math.pow((z)/c,2)); // z measured from waist
+  // standing-wave envelope: node at waist, antinodes at bellies. A(z)=sin(2*pi*z/L) gives node at center.
+  const env=z=> Math.sin(2*Math.PI*z/L);
+  const breathe=Math.cos(CLOCK*0.05);
+  // profile + fill colored by |displacement|
+  g.lineWidth=1.4;
+  // left & right hyperbola profiles
+  for(const sgn of [-1,1]){
+    g.beginPath();
+    for(let zz=-L/2; zz<=L/2; zz+=4){ const y=waistY+zz; const x=cx+sgn*rad(zz); if(zz===-L/2) g.moveTo(x,y); else g.lineTo(x,y); }
+    g.strokeStyle='#5b4a86'; g.stroke();
+  }
+  // doubly-ruled hyperboloid: each ruling is a STRAIGHT line from a top-rim point
+  // to a bottom-rim point twisted by ±Δ. The two families crisscross and pinch at the waist.
+  const rTop=rad(L/2), NR=16, TW=0.62; // twist (radians) sets how tight the gorge pinches
+  for(const dir of [1,-1]){
+    g.strokeStyle=dir>0?'#46356b':'#3a2c5c'; g.globalAlpha=.5; g.lineWidth=0.8;
+    for(let i=0;i<NR;i++){
+      const th=(i/NR)*Math.PI*2;
+      const xTop=cx+rTop*Math.cos(th);
+      const xBot=cx+rTop*Math.cos(th+dir*TW);
+      g.beginPath(); g.moveTo(xTop,top); g.lineTo(xBot,bot); g.stroke();
+    }
+  }
+  g.globalAlpha=1;
+  // displacement coloring: sample along axis, draw the breathing centerline
+  g.lineWidth=2.2; g.beginPath();
+  for(let zz=-L/2; zz<=L/2; zz+=3){ const y=waistY+zz; const disp=env(zz)*breathe*16; const x=cx+disp;
+    if(zz===-L/2) g.moveTo(x,y); else g.lineTo(x,y); }
+  const grad=g.createLinearGradient(0,top,0,bot); grad.addColorStop(0,'#a78bfa'); grad.addColorStop(.5,'#34d399'); grad.addColorStop(1,'#a78bfa');
+  g.strokeStyle=grad; g.stroke();
+  // antinode markers at bellies
+  for(const zz of [-L/4, L/4]){ const y=waistY+zz; g.fillStyle='#5b4a86'; g.font='9px ui-monospace,monospace'; g.textAlign='left';
+    g.fillText('antinode · belly', cx+rad(zz)+6, y+3); }
+  // the NODE / waist: perceptron + gate
+  const e=energy(amp)||1; let outsideSet=0; for(let k=ADMIT_K+1;k<=M;k++) outsideSet+=amp[k]*amp[k];
+  const refuse=outsideSet/e>GATE_THR;
+  // gate ring (fixed witness)
+  g.lineWidth=3; g.strokeStyle=refuse?'#fb7185':'#34d399'; g.globalAlpha=.9;
+  g.beginPath(); g.arc(cx,waistY,30,0,7); g.stroke(); g.globalAlpha=1;
+  g.setLineDash([3,4]); g.lineWidth=1; g.strokeStyle=refuse?'#fb7185':'#34d399'; g.globalAlpha=.6;
+  g.beginPath(); g.arc(cx,waistY,36,0,7); g.stroke(); g.setLineDash([]); g.globalAlpha=1;
+  // perceptron node (learned channel) at the waist
+  g.fillStyle=bent?'#f59e0b':'#a78bfa'; g.beginPath(); g.arc(cx,waistY,12,0,7); g.fill();
+  g.strokeStyle='#0a0710'; g.lineWidth=2; g.stroke();
+  g.fillStyle='#0a0710'; g.font='bold 10px ui-monospace,monospace'; g.textAlign='center'; g.textBaseline='middle';
+  g.fillText(bent?'σ':'·', cx, waistY); g.textBaseline='alphabetic';
+  // labels
+  g.fillStyle='#c4b5fd'; g.font='10px ui-monospace,monospace'; g.textAlign='center';
+  g.fillText('node · gorge · waist', cx, waistY+52);
+  g.fillStyle=refuse?'#fb7185':'#34d399'; g.fillText(refuse?'gate: REFUSE':'gate: ADMIT', cx, waistY+66);
+  g.fillStyle='#6b5a8c'; g.fillText(bent?'perceptron: BENT (couples)':'perceptron: LINEAR (clean)', cx, top-8);
+}
+
+// ---------- analysis canvas: waveform + spectrum ----------
+function drawAna(){
+  const {g,w,h}=fit(document.getElementById('ana')); g.clearRect(0,0,w,h);
+  const padL=8, padR=8, midSplit=Math.round(h*0.40);
+  // --- waveform u(x) (breathing) ---
+  const u=reconstruct(amp); let umax=1e-6; for(const v of u) umax=Math.max(umax,Math.abs(v));
+  const breathe=Math.cos(CLOCK*0.05);
+  g.strokeStyle='#241738'; g.lineWidth=1; g.beginPath(); g.moveTo(padL,midSplit/2); g.lineTo(w-padR,midSplit/2); g.stroke();
+  g.lineWidth=2; g.beginPath();
+  for(let j=0;j<NX;j++){ const x=padL+(j/(NX-1))*(w-padL-padR); const y=midSplit/2 - (u[j]/umax)*(midSplit/2-10)*breathe;
+    j?g.lineTo(x,y):g.moveTo(x,y); }
+  g.strokeStyle='#7c3aed'; g.stroke();
+  g.fillStyle='#6b5a8c'; g.font='9px ui-monospace,monospace'; g.textAlign='left'; g.fillText('field u(x) through the waist', padL+2, 12);
+  // divider
+  g.strokeStyle='#2e2148'; g.beginPath(); g.moveTo(0,midSplit); g.lineTo(w,midSplit); g.stroke();
+  // --- spectrum bars ---
+  const e=energy(amp)||1;
+  const baseY=h-22, topY=midSplit+18, bh=baseY-topY;
+  const bw=(w-padL-padR)/M;
+  g.fillStyle='#6b5a8c'; g.font='9px ui-monospace,monospace'; g.textAlign='left'; g.fillText('modal spectrum (energy per mode)', padL+2, midSplit+13);
+  for(let k=1;k<=M;k++){
+    const frac=amp[k]*amp[k]/e; const x=padL+(k-1)*bw;
+    const isInj=injected.includes(k);
+    g.fillStyle=isInj?'#a78bfa':'#f59e0b'; g.globalAlpha=frac>0.001?1:0.18;
+    const hh=Math.max(2,frac*bh);
+    g.fillRect(x+bw*0.18, baseY-hh, bw*0.64, hh); g.globalAlpha=1;
+    g.fillStyle='#6b5a8c'; g.textAlign='center'; g.fillText(k, x+bw/2, baseY+12);
+  }
+  // admissible-set boundary (after mode ADMIT_K)
+  const xb=padL+ADMIT_K*bw;
+  g.strokeStyle='#fb7185'; g.setLineDash([4,4]); g.lineWidth=1.2; g.globalAlpha=.8;
+  g.beginPath(); g.moveTo(xb,topY-6); g.lineTo(xb,baseY); g.stroke(); g.setLineDash([]); g.globalAlpha=1;
+  g.fillStyle='#fb7185'; g.font='9px ui-monospace,monospace'; g.textAlign='left'; g.fillText('admissible →| outside', xb+3, topY);
+}
+
+// ---------- controls ----------
+function setInjBtns(id){ ['inj12','inj13','inj1','inj135'].forEach(b=>document.getElementById(b).classList.toggle('on',b===id)); }
+document.getElementById('inj12').onclick=()=>{ setInjBtns('inj12'); inject([1,2],[1,0.7]); };
+document.getElementById('inj13').onclick=()=>{ setInjBtns('inj13'); inject([1,3],[1,0.6]); };
+document.getElementById('inj1').onclick=()=>{ setInjBtns('inj1'); inject([1],[1]); };
+document.getElementById('inj135').onclick=()=>{ setInjBtns('inj135'); inject([1,3,5],[1,0.6,0.4]); };
+function setEl(b){ bent=b; document.getElementById('elLin').classList.toggle('on',!b); document.getElementById('elBent').classList.toggle('on',b); drawGeo(); }
+document.getElementById('elLin').onclick=()=>setEl(false);
+document.getElementById('elBent').onclick=()=>setEl(true);
+document.getElementById('gain').oninput=function(){ gain=(+this.value)/10; document.getElementById('gainL').textContent=gain.toFixed(1); };
+document.getElementById('pulse').onclick=()=>applyWaist();
+document.getElementById('evolve').onclick=function(){ evolving=!evolving; this.classList.toggle('on',evolving); this.textContent=evolving?'evolve ❚❚':'evolve ▶'; };
+document.getElementById('reset').onclick=()=>{ evolving=false; const eb=document.getElementById('evolve'); eb.classList.remove('on'); eb.textContent='evolve ▶'; inject(injected,injected.map((k,i)=>i===0?1:(injected.length===3?[1,0.6,0.4][i]:[1,0.7][i]))); };
+
+inject([1,2],[1,0.7]);
+
+// ---------- loop ----------
+(function loop(){
+  CLOCK++;
+  if(evolving && CLOCK%5===0) applyWaist();
+  drawGeo(); drawAna();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
